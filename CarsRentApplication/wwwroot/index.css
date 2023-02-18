@@ -1,0 +1,48 @@
+@charset "utf-8";
+
+html,
+body {
+    height: 100%;
+}
+
+.container {
+    text-align: left;
+    min-height: 100%;
+    display: grid;
+    grid-template-columns: 150px 1fr auto;
+    grid-template-rows: 50px 1fr 85px;
+    grid-template-areas:
+        'header header header'
+        'left main right'
+        'footer footer footer';
+}
+
+.left {
+    grid-area: left;
+    background-color: antiquewhite;
+}
+
+.right {
+    background-color: aqua;
+    grid-area: right;
+}
+
+.main {
+    grid-area: main;
+    background-color: aquamarine;
+}
+
+.header {
+    grid-area: header;
+    background-color: azure;
+}
+
+.footer {
+    grid-area: footer;
+    background-color: beige;
+}
+
+.container div {
+    border: 0.1px solid black;
+    padding: 10px 0px 0px 10px;
+}
