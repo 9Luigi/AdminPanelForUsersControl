@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
+using System.Net;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
 
@@ -16,7 +17,12 @@ builder.Services.AddAuthentication().AddCookie(CookieAuthenticationDefaults.Auth
 	options.LoginPath = "/html/login.html"; //redirect on unauthenticated
 	options.AccessDeniedPath = "/html/accessDenied"; //redirect on unauthorize
 });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+	options.AddPolicy("AdminOnly", policy => {
+		policy.RequireClaim(ClaimTypes.Role,"Admin");
+		});
+});
 builder.Services.AddDbContext<EFContext>(options =>
 {
 	options.UseSqlServer(ConnectionString);
@@ -26,7 +32,7 @@ var app = builder.Build();
 #region Middleware
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.ProtectStaticFilesForNonAdminMiddlware(new ProtectStaticFilesForNonAdminOptions("/html/admin/admin.html", "AdminOnly"));
 app.UseDefaultFiles();
 app.UseStaticFiles();
 #endregion
@@ -34,11 +40,20 @@ app.UseStaticFiles();
 #region EndPoints
 app.MapGet("/admin", [Authorize(Roles = "Admin")] () =>
 {
-	return Results.Redirect("html/admin/admin.html");
+	return Results.Redirect("/html/admin/admin.html");
 });
 app.MapGet("/admin/getAllUsers", async (EFContext db) =>
 {
 	return await db.Users.Select(u => new { u.Name,u.Surname,u.Email,u.Role, u.Id }).ToListAsync();
+});
+app.MapGet("/admin/getUser/{id}", async (int id,EFContext db) =>
+{
+	var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id);
+	if (user is User u)
+	{
+		return Results.Json(user);
+	}
+	return Results.NotFound();
 });
 app.MapPost("/login", async (string? returnUrl, HttpContext context, EFContext db) =>
 {
@@ -62,7 +77,7 @@ app.MapPost("/login", async (string? returnUrl, HttpContext context, EFContext d
 	await context.SignInAsync(claimsPrincipal);
 	if (user.Role=="Admin")
 	{
-		return Results.Redirect("html/admin/admin.html");
+		return Results.Redirect("/html/admin/admin.html");
 	}
 	return Results.Redirect(returnUrl ?? "/");
 });
@@ -70,7 +85,6 @@ app.MapPost("/login", async (string? returnUrl, HttpContext context, EFContext d
 {
 	Results.Redirect("/cars");
 });*/
-app.MapGet("/api/users", async (EFContext db) => await db.Users.ToListAsync());
 //app.MapGet("/api/cars")
 #endregion
 

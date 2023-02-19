@@ -5,9 +5,9 @@ body {
     height: 100%;
 }
 
-.container {
+.containerRightClosed {
     text-align: left;
-    min-height: 100%;
+    min-height: 98%;
     display: grid;
     grid-template-columns: 150px 1fr auto;
     grid-template-rows: 50px 1fr 85px;
@@ -20,29 +20,38 @@ body {
 .left {
     grid-area: left;
     background-color: antiquewhite;
+    border-width: 0 0 0 1px;
+    border-style: solid;
 }
 
 .right {
     background-color: aqua;
     grid-area: right;
+    border-width: 0 1px 0 0;
+    border-style: solid;
 }
 
 .main {
     grid-area: main;
     background-color: aquamarine;
+    border-width: 0px 1px;
+    border-style: solid;
 }
 
 .header {
     grid-area: header;
     background-color: azure;
+    border-width: 1px;
+    border-style: solid;
 }
 
 .footer {
     grid-area: footer;
     background-color: beige;
+    border-width: 1px;
+    border-style: solid;
 }
 
-.container div {
-    border: 0.1px solid black;
-    padding: 10px 0px 0px 10px;
+.containerRightClosed div {
+    padding: 5px 0px 0px 5px;
 }
