@@ -9,7 +9,18 @@ body {
     text-align: left;
     min-height: 98%;
     display: grid;
-    grid-template-columns: 150px 1fr auto;
+    grid-template-columns: 150px 1fr 0px;
+    grid-template-rows: 50px 1fr 85px;
+    grid-template-areas:
+        'header header header'
+        'left main right'
+        'footer footer footer';
+    -webkit-transition: all .3s linear 0s;
+    transition: all .3s linear 0s;
+}
+
+.containerRightOpen {
+    grid-template-columns: 150px 1fr 250px;
     grid-template-rows: 50px 1fr 85px;
     grid-template-areas:
         'header header header'
@@ -19,13 +30,13 @@ body {
 
 .left {
     grid-area: left;
-    background-color: antiquewhite;
+    background-color: #ABFFC7;
     border-width: 0 0 0 1px;
     border-style: solid;
 }
 
 .right {
-    background-color: aqua;
+    background-color: #ABFFC7;
     grid-area: right;
     border-width: 0 1px 0 0;
     border-style: solid;
@@ -33,25 +44,41 @@ body {
 
 .main {
     grid-area: main;
-    background-color: aquamarine;
+    background-color: #8CFFB3;
     border-width: 0px 1px;
     border-style: solid;
 }
 
 .header {
     grid-area: header;
-    background-color: azure;
+    background-color: #69BF86;
     border-width: 1px;
     border-style: solid;
 }
 
 .footer {
     grid-area: footer;
-    background-color: beige;
+    background-color: #69BF86;
     border-width: 1px;
     border-style: solid;
 }
 
 .containerRightClosed div {
     padding: 5px 0px 0px 5px;
+}
+
+.containerRightOpen div {
+    padding: 5px 0px 0px 5px;
+}
+
+.hidden {
+    display: none;
+}
+
+#idInput,
+#nameInput,
+#surnameInput,
+#emailInput,
+#roleInput {
+    width: 210px;
 }

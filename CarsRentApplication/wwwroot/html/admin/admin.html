@@ -10,20 +10,53 @@
 </head>
 
 <body>
-    <div class="containerRightClosed">
+    <div class="containerRightClosed" id="container">
         <div class="main" id="main">
 
         </div>
         <div class="left">
-            <div>
-                <button id="DownloadUsers">Download users</button>
-            </div>
-            <div></div>
-            <div></div>
-            <div></div>
-            <div></div>
         </div>
-        <div class="right">Right</div>
+        <div class="right hidden">
+            <div>
+                <label for="IdInput">ID</label>
+            </div>
+            <div>
+                <input id="idInput" disabled="true" type="text">
+            </div>
+
+            <div>
+                <label for="nameInput">Name</label>
+            </div>
+            <div><input id="nameInput" type="text">
+            </div>
+
+            <div>
+                <label for="surnameInput">Surname</label>
+            </div>
+            <div>
+                <input id="surnameInput" type="text">
+            </div>
+
+            <div>
+                <label for="emailInput">Email</label>
+            </div>
+            <div>
+                <input id="emailInput" type="text">
+            </div>
+
+            <div>
+                <label for="roleAdmin">Admin</label>
+                <input name="roleInput" id="roleAdmin" type="radio">
+            </div>
+            <div>
+                <label for="roleUser">User</label>
+                <input name="roleInput" id="roleUser" type="radio">
+            </div>
+            <div>
+                <button id="saveUserButton">Save</button>
+                <button id="closeEditUserAreaButton">Close</button>
+            </div>
+        </div>
         <div class="header">Header</div>
         <div class="footer">Footer</div>
     </div>

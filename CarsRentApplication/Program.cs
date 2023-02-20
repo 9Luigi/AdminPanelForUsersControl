@@ -11,6 +11,7 @@ string ConnectionString = @"Server="
 		+ Environment.MachineName
 		+ ";DataBase=Cars;User Id=RomanKudrik;Password=98585R;MultipleActiveResultSets=true;Encrypt=False";
 
+#region WebApplicationBuilder
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAuthentication().AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
@@ -27,8 +28,10 @@ builder.Services.AddDbContext<EFContext>(options =>
 {
 	options.UseSqlServer(ConnectionString);
 });
+#endregion
 
 var app = builder.Build();
+
 #region Middleware
 app.UseAuthentication();
 app.UseAuthorization();
@@ -38,23 +41,28 @@ app.UseStaticFiles();
 #endregion
 
 #region EndPoints
+
+#region MapGET
 app.MapGet("/admin", [Authorize(Roles = "Admin")] () =>
 {
 	return Results.Redirect("/html/admin/admin.html");
 });
-app.MapGet("/admin/getAllUsers", async (EFContext db) =>
+app.MapGet("/admin/users", async (EFContext db) =>
 {
 	return await db.Users.Select(u => new { u.Name,u.Surname,u.Email,u.Role, u.Id }).ToListAsync();
 });
-app.MapGet("/admin/getUser/{id}", async (int id,EFContext db) =>
+app.MapGet("/admin/users/{id}", async (int id,EFContext db) =>
 {
-	var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id);
-	if (user is User u)
+	var user =  await db.Users.Where(u => u.Id == id).Select(u => new {u.Id,u.Name,u.Surname,u.Email,u.Role }).FirstOrDefaultAsync();
+	if (user is not null)
 	{
 		return Results.Json(user);
 	}
 	return Results.NotFound();
 });
+#endregion
+
+#region MapPost
 app.MapPost("/login", async (string? returnUrl, HttpContext context, EFContext db) =>
 {
 	var form = context.Request.Form;
@@ -81,11 +89,19 @@ app.MapPost("/login", async (string? returnUrl, HttpContext context, EFContext d
 	}
 	return Results.Redirect(returnUrl ?? "/");
 });
-/*app.Map("/", async () =>
+app.MapPut("/admin/users", async (User? dataFromFront,EFContext db) =>
 {
-	Results.Redirect("/cars");
-});*/
-//app.MapGet("/api/cars")
+	if (dataFromFront == null) return Results.BadRequest(new {message="Request body is empty"});
+	var user = await db.Users.Where(u=>u.Id==dataFromFront.Id).FirstOrDefaultAsync();
+	if (user == null) return Results.NotFound();
+	user.Email = dataFromFront.Email;
+	user.Surname = dataFromFront.Surname;
+	user.Name = dataFromFront.Name;
+	user.Role = dataFromFront.Role;
+	db.SaveChanges();
+	return Results.Ok(user);
+});
+#endregion
 #endregion
 
 app.Run();
