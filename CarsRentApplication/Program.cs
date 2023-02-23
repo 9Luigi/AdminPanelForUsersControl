@@ -2,10 +2,13 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.Net;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Claims;
+using System.Text.Json;
 
 string ConnectionString = @"Server="
 		+ Environment.MachineName
@@ -16,13 +19,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddAuthentication().AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
 {
 	options.LoginPath = "/html/login.html"; //redirect on unauthenticated
-	options.AccessDeniedPath = "/html/accessDenied"; //redirect on unauthorize
+	options.AccessDeniedPath = "/html/accessDenied.html"; //redirect on unauthorize
+	options.LogoutPath = "/";
 });
 builder.Services.AddAuthorization(options =>
 {
-	options.AddPolicy("AdminOnly", policy => {
-		policy.RequireClaim(ClaimTypes.Role,"Admin");
-		});
+	options.AddPolicy("AdminOnly", policy =>
+	{
+		policy.RequireClaim(ClaimTypes.Role, "Admin");
+	});
 });
 builder.Services.AddDbContext<EFContext>(options =>
 {
@@ -41,19 +46,19 @@ app.UseStaticFiles();
 #endregion
 
 #region EndPoints
-
+//TODO change endpoints regions
 #region MapGET
-app.MapGet("/admin", [Authorize(Roles = "Admin")] () =>
+app.MapGet("/admin", [Authorize(Roles = "Admin")] () => //just for comfort
 {
 	return Results.Redirect("/html/admin/admin.html");
 });
 app.MapGet("/admin/users", async (EFContext db) =>
 {
-	return await db.Users.Select(u => new { u.Name,u.Surname,u.Email,u.Role, u.Id }).ToListAsync();
+	return await db.Users.Select(u => new { u.Name, u.Surname, u.Email, u.Role, u.Id }).ToListAsync();
 });
-app.MapGet("/admin/users/{id}", async (int id,EFContext db) =>
+app.MapGet("/admin/users/{id}", async (int id, EFContext db) =>
 {
-	var user =  await db.Users.Where(u => u.Id == id).Select(u => new {u.Id,u.Name,u.Surname,u.Email,u.Role }).FirstOrDefaultAsync();
+	var user = await db.Users.Where(u => u.Id == id).Select(u => new { u.Id, u.Name, u.Surname, u.Email, u.Role }).FirstOrDefaultAsync();
 	if (user is not null)
 	{
 		return Results.Json(user);
@@ -83,16 +88,22 @@ app.MapPost("/login", async (string? returnUrl, HttpContext context, EFContext d
 	var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
 	var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
 	await context.SignInAsync(claimsPrincipal);
-	if (user.Role=="Admin")
+	if (user.Role == "Admin")
 	{
 		return Results.Redirect("/html/admin/admin.html");
 	}
 	return Results.Redirect(returnUrl ?? "/");
 });
-app.MapPut("/admin/users", async (User? dataFromFront,EFContext db) =>
+app.MapGet("/Admin/Users/Count", (EFContext db) =>
 {
-	if (dataFromFront == null) return Results.BadRequest(new {message="Request body is empty"});
-	var user = await db.Users.Where(u=>u.Id==dataFromFront.Id).FirstOrDefaultAsync();
+	int usersCount = db.Users.Count();
+	var usersCountJson = JsonSerializer.Serialize(new {Count=usersCount});
+	return Results.Ok(usersCountJson);
+});
+app.MapPut("/admin/users", async (User? dataFromFront, EFContext db) =>
+{
+	if (dataFromFront == null) return Results.BadRequest(new { message = "Request body is empty" });
+	var user = await db.Users.Where(u => u.Id == dataFromFront.Id).FirstOrDefaultAsync();
 	if (user == null) return Results.NotFound();
 	user.Email = dataFromFront.Email;
 	user.Surname = dataFromFront.Surname;
@@ -100,6 +111,15 @@ app.MapPut("/admin/users", async (User? dataFromFront,EFContext db) =>
 	user.Role = dataFromFront.Role;
 	db.SaveChanges();
 	return Results.Ok(user);
+});
+app.MapDelete("/admin/users", async ([FromBody] User? userForDelete, EFContext db) => //TODO why need attribute FromBody?
+{
+	if (userForDelete == null) return Results.BadRequest(new { message = "Request body is empty" });
+	var user = await db.Users.Where(u => u.Id == userForDelete.Id).FirstOrDefaultAsync();
+	if (user == null) return Results.NotFound();
+	db.Users.Remove(user);
+	db.SaveChanges();
+	return Results.Ok();
 });
 #endregion
 #endregion
