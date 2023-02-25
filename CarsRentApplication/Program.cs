@@ -3,14 +3,11 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text.Json;
-
-string ConnectionString = @"Server="
-		+ Environment.MachineName
-		+ ";DataBase=Cars;User Id=RomanKudrik;Password=98585R;MultipleActiveResultSets=true;Encrypt=False";
 
 #region WebApplicationBuilder
 var builder = WebApplication.CreateBuilder(args);
@@ -27,10 +24,7 @@ builder.Services.AddAuthorization(options =>
 		policy.RequireClaim(ClaimTypes.Role, "Admin");
 	});
 });
-builder.Services.AddDbContext<EFContext>(options =>
-{
-	options.UseSqlServer(ConnectionString);
-});
+builder.Services.AddDbContext<EFContext>();
 #endregion
 
 var app = builder.Build();
@@ -52,11 +46,11 @@ app.MapGet("/admin", [Authorize(Roles = "Admin")] () => //just for comfort
 });
 app.MapGet("/admin/users/{limit}/{offset}", async (int limit,int offset,EFContext db) =>
 {
-	return await db.Users.Skip(offset).Take(limit).ToListAsync();
+	return await db.Users.Skip(offset).Take(limit).OrderBy(u=>u.Name).ToListAsync();
 });
 app.MapGet("/admin/users/{email}", async (string email, EFContext db) =>
 {
-	var user = await db.Users.Where(u=>u.Email.Contains(email)).Take(15).ToListAsync();
+	var user = await db.Users.Where(u=>u.Email.Contains(email)).Take(15).OrderBy(u=>u.Email).ToListAsync();
 	if (user is not null)
 	{
 		return Results.Json(user);
