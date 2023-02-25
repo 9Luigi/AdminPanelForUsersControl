@@ -5,15 +5,37 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="../../index.css" rel="stylesheet" type="text/css">
+    <link href="/bundle.css" rel="stylesheet" type="text/css">
     <title>Admin</title>
 </head>
 
 <body>
     <div class="containerRightClosed" id="container">
         <div class="main" id="main">
+            <div id="divForUsersTable"></div>
+            <div id="divForUsersSearch" style="display: none;">
+                <input type="text" id=inputSearchByEmail placeholder="Search by email">
+                <button type="reset" id="reset">Reset</button>
+                <script>
+                    document.getElementById('reset').addEventListener('click', () => {
+                        document.getElementById('inputSearchByEmail').value = "";
+
+                        var event = document.createEvent('Event');
+                        event.initEvent('input', true, true);
+                        document.getElementById('inputSearchByEmail').dispatchEvent(event);;
+                    })
+                </script>
+            </div>
+            <div id="divForNavigateButtons"></div>
         </div>
         <div class="left">
+            <div class="leftMenu" id="leftMenu">
+                <div id="adminMenuUsers" class="active">Users admin panel</div>
+                <div id="adminMenuSettings">Link 1</div>
+                <div>Link 2</div>
+                <div>Link 3</div>
+                <div>Link 4</div>
+            </div>
         </div>
         <div class="right hidden">
             <div>
@@ -59,7 +81,7 @@
         <div class="header">Header</div>
         <div class="footer">Footer</div>
     </div>
-    <script src="../../js/adminUsersUnit.js"></script>
+    <script src="/bundle.js"></script>
 </body>
 
 </html>

@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Net;
-using System.Reflection.Metadata.Ecma335;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -20,7 +18,7 @@ builder.Services.AddAuthentication().AddCookie(CookieAuthenticationDefaults.Auth
 {
 	options.LoginPath = "/html/login.html"; //redirect on unauthenticated
 	options.AccessDeniedPath = "/html/accessDenied.html"; //redirect on unauthorize
-	options.LogoutPath = "/";
+	/*options.LogoutPath = "/";*/
 });
 builder.Services.AddAuthorization(options =>
 {
@@ -40,7 +38,7 @@ var app = builder.Build();
 #region Middleware
 app.UseAuthentication();
 app.UseAuthorization();
-app.ProtectStaticFilesForNonAdminMiddlware(new ProtectStaticFilesForNonAdminOptions("/html/admin/admin.html", "AdminOnly"));
+app.ProtectStaticFilesForNonAdminMiddlware(new ProtectStaticFilesForNonAdminOptions("/html/admin", "AdminOnly"));
 app.UseDefaultFiles();
 app.UseStaticFiles();
 #endregion
@@ -52,13 +50,13 @@ app.MapGet("/admin", [Authorize(Roles = "Admin")] () => //just for comfort
 {
 	return Results.Redirect("/html/admin/admin.html");
 });
-app.MapGet("/admin/users", async (EFContext db) =>
+app.MapGet("/admin/users/{limit}/{offset}", async (int limit,int offset,EFContext db) =>
 {
-	return await db.Users.Select(u => new { u.Name, u.Surname, u.Email, u.Role, u.Id }).ToListAsync();
+	return await db.Users.Skip(offset).Take(limit).ToListAsync();
 });
-app.MapGet("/admin/users/{id}", async (int id, EFContext db) =>
+app.MapGet("/admin/users/{email}", async (string email, EFContext db) =>
 {
-	var user = await db.Users.Where(u => u.Id == id).Select(u => new { u.Id, u.Name, u.Surname, u.Email, u.Role }).FirstOrDefaultAsync();
+	var user = await db.Users.Where(u=>u.Email.Contains(email)).Take(15).ToListAsync();
 	if (user is not null)
 	{
 		return Results.Json(user);
@@ -73,6 +71,7 @@ app.MapPost("/login", async (string? returnUrl, HttpContext context, EFContext d
 	var form = context.Request.Form;
 	if (!form.ContainsKey("email") || !form.ContainsKey("password"))
 		return Results.BadRequest("Email or password not send");
+	if (form["email"].Count==0 || form["password"].Count == 0) return Results.BadRequest("Email or password is empty");
 	string email = form["email"]!;
 	string password = form["password"]!;
 	var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email && u.Password == password);
@@ -94,21 +93,19 @@ app.MapPost("/login", async (string? returnUrl, HttpContext context, EFContext d
 	}
 	return Results.Redirect(returnUrl ?? "/");
 });
-app.MapGet("/Admin/Users/Count", (EFContext db) =>
+app.MapGet("/admin/users/count", (EFContext db) =>
 {
 	int usersCount = db.Users.Count();
 	var usersCountJson = JsonSerializer.Serialize(new {Count=usersCount});
 	return Results.Ok(usersCountJson);
+	//TODO TRY CATCH ON ALL ENDPOINT ELSE SERVER WILL SHUT DOWN AFTER EACH FRONT ERROR ACCURING END POINTS
 });
 app.MapPut("/admin/users", async (User? dataFromFront, EFContext db) =>
 {
 	if (dataFromFront == null) return Results.BadRequest(new { message = "Request body is empty" });
 	var user = await db.Users.Where(u => u.Id == dataFromFront.Id).FirstOrDefaultAsync();
 	if (user == null) return Results.NotFound();
-	user.Email = dataFromFront.Email;
-	user.Surname = dataFromFront.Surname;
-	user.Name = dataFromFront.Name;
-	user.Role = dataFromFront.Role;
+	user = dataFromFront;
 	db.SaveChanges();
 	return Results.Ok(user);
 });
