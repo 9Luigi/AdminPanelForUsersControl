@@ -25,6 +25,8 @@ builder.Services.AddAuthorization(options =>
 	});
 });
 builder.Services.AddDbContext<EFContext>();
+builder.Services.AddTransient<UserCache>();//service cashes users data
+builder.Services.AddMemoryCache();
 #endregion
 
 var app = builder.Build();
@@ -36,17 +38,21 @@ app.ProtectStaticFilesForNonAdminMiddlware(new ProtectStaticFilesForNonAdminOpti
 app.UseDefaultFiles();
 app.UseStaticFiles();
 #endregion
-
 #region EndPoints
 //TODO change endpoints regions
 #region MapGET
-app.MapGet("/admin", [Authorize(Roles = "Admin")] () => //just for comfort
+app.MapGet("/admin", [Authorize(Roles = "Admin")] () => //just for comfort //TODO Redirect instead of endpoint
 {
 	return Results.Redirect("/html/admin/admin.html");
 });
-app.MapGet("/admin/users/{limit}/{offset}", async (int limit,int offset,EFContext db) =>
+app.MapGet("/admin/users/{limit}/{offset}", async (int limit,int offset,EFContext db,UserCache cache) =>
 {
-	return await db.Users.Skip(offset).Take(limit).OrderBy(u=>u.Name).ToListAsync();
+	var usersToResponse =  db.Users.Skip(offset).Take(limit).OrderBy(u=>u.Name).ToList();
+	foreach (var user in usersToResponse)
+	{
+		await cache.GetUser(user.Id);
+	}
+	return usersToResponse;
 });
 app.MapGet("/admin/users/{email}", async (string email, EFContext db) =>
 {
