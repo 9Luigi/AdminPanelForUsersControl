@@ -1,13 +1,6 @@
-@charset "utf-8";
-
-html,
-body {
-    height: 100%;
-}
-
 .containerRightClosed {
     text-align: left;
-    min-height: 98%;
+    min-height: 100%;
     display: grid;
     grid-template-columns: 150px 1fr 0px;
     grid-template-rows: 50px 1fr 85px;

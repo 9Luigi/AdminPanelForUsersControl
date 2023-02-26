@@ -1,18 +1,6 @@
-.loginForm {
-    border-style: solid;
-    border-color: black;
-    border-width: 50px;
-}
-@charset "utf-8";
-
-html,
-body {
-    height: 100%;
-}
-
 .containerRightClosed {
     text-align: left;
-    min-height: 98%;
+    min-height: 100%;
     display: grid;
     grid-template-columns: 150px 1fr 0px;
     grid-template-rows: 50px 1fr 85px;
@@ -137,4 +125,50 @@ body {
 
 .main>div:nth-last-child(1) {
     margin-bottom: 20px;
+}
+@charset "utf-8";
+
+html,
+body {
+    height: 100%;
+    margin: 0px;
+}
+
+.indexContainer {
+    text-align: left;
+    margin: 0px;
+    min-height: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 50px 1fr 50px;
+    grid-template-areas:
+        'header'
+        'main'
+        'footer';
+}
+
+.indexMain {
+    grid-area: main;
+    background-color: #8CFFB3;
+    border-width: 0px 1px;
+    border-style: solid;
+}
+
+.indexHeader {
+    grid-area: header;
+    background-color: #69BF86;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.indexFooter {
+    grid-area: footer;
+    background-color: #69BF86;
+    border-width: 1px;
+    border-style: solid;
+}
+.loginForm {
+    border-style: solid;
+    border-color: black;
+    border-width: 50px;
 }

@@ -59,7 +59,7 @@ app.MapGet("/admin/users/{email}", async (string email, EFContext db) =>
 });
 #endregion
 
-#region MapPost
+#region MapPost/PUT/DELETE
 app.MapPost("/login", async (string? returnUrl, HttpContext context, EFContext db) =>
 {
 	var form = context.Request.Form;
@@ -99,7 +99,12 @@ app.MapPut("/admin/users", async (User? dataFromFront, EFContext db) =>
 	if (dataFromFront == null) return Results.BadRequest(new { message = "Request body is empty" });
 	var user = await db.Users.Where(u => u.Id == dataFromFront.Id).FirstOrDefaultAsync();
 	if (user == null) return Results.NotFound();
-	user = dataFromFront;
+	user.Name = dataFromFront.Name;
+	user.Surname = dataFromFront.Surname;
+	user.Email = dataFromFront.Email;
+	user.Password = dataFromFront.Password;
+	user.PhoneNumber = dataFromFront.PhoneNumber;
+	user.Role = dataFromFront.Role;
 	db.SaveChanges();
 	return Results.Ok(user);
 });

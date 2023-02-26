@@ -1,0 +1,17 @@
+[
+  {
+    "outputFileName": "wwwroot/bundle.js",
+    "inputFiles": [
+      "wwwroot/js/admin/leftGridMenu.js",
+      "wwwroot/js/admin/adminUsersUnit.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/bundle.css",
+    "inputFiles": [
+      "wwwroot/css/admin.css",
+      "wwwroot/css/index.css",
+      "wwwroot/css/login.css"
+    ]
+  }
+]

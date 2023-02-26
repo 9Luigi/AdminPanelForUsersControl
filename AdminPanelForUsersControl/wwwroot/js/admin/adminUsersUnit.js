@@ -21,6 +21,8 @@ const surnameInput = document.getElementById("surnameInput");
 const emailInput = document.getElementById("emailInput");
 const roleUser = document.getElementById("roleUser");
 const roleAdmin = document.getElementById("roleAdmin");
+const passwordInput = document.getElementById("passwordInput");
+const phoneNumberInput = document.getElementById('phoneNumberInput');
 //#endregion
 
 const closeEditUserAreaButton = document.getElementById("closeEditUserAreaButton");
@@ -80,6 +82,8 @@ let userUpdate = async () => { //TODO name should be update/put or save
             name: nameInput.value,
             surname: surnameInput.value,
             email: emailInput.value,
+            password: passwordInput.value,
+            phoneNumber: phoneNumberInput.value,
             role: role,
         })
     });
@@ -141,6 +145,8 @@ let replaceUserDataIntoTR = (SetTr, GetTr, user) => {
         + user.name + `</td><td>`
         + user.surname + `</td><td>`
         + user.email + `</td><td>`
+        + user.password + '</td><td>'
+        + user.phoneNumber + '</td><td>'
         + user.role + `</td><td><button id=getUserButton${user.id}>Edit</button> <button id=deleteUserButton${user.id}>Delete</button></td>`;
     GetTr.replaceWith(SetTr);
 }
@@ -187,6 +193,8 @@ let fillUserFormWithValuesFromFetch = (user) => {
     nameInput.value = user.name;
     surnameInput.value = user.surname;
     emailInput.value = user.email;
+    passwordInput.value = user.password;
+    phoneNumberInput.value = user.phoneNumber;
     switch (user.role) {
         case "Admin": roleAdmin.checked = true;
             break;
@@ -251,7 +259,9 @@ let markCurrentNavigateButton = (buttons, current) => {
 let displayONSearchInputs = () => {
     divForUsersSearch.style.setProperty('display', 'block');
 }
-
+let displayOFFSearchInputs = () => {
+    divForUsersSearch.style.setProperty('display', 'none');
+}
 let onUsersAdminPanelClick = async () => {//users unit for admin load on function call, get table of users, search user, navigate panel etc
     resetContainerHTML(divForNavigateButtons);
     resetContainerHTML(divForUsersTable);
@@ -301,5 +311,11 @@ let searchByEmail = async () => {
 closeEditUserAreaButton.addEventListener('click', function () { closeRightArea(container, rightGridArea) });
 saveUserButton.addEventListener('click', userUpdate);
 adminMenuUsers.addEventListener('click', onUsersAdminPanelClick);
+adminMenuSettings.addEventListener('click', () => {
+    closeRightArea(container, rightGridArea);
+    resetContainerHTML(divForNavigateButtons);
+    resetContainerHTML(divForUsersTable);
+    displayOFFSearchInputs();
+});
 inputSearchByEmail.addEventListener('input', searchByEmail);
 //#endregion
