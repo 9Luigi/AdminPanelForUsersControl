@@ -45,18 +45,26 @@ app.MapGet("/admin", [Authorize(Roles = "Admin")] () => //just for comfort //TOD
 {
 	return Results.Redirect("/html/admin/admin.html");
 });
-app.MapGet("/admin/users/{limit}/{offset}", async (int limit,int offset,EFContext db,UserCache cache) =>
+app.MapGet("/admin/users/{limit}/{offset}", async (int limit, int offset, EFContext db, UserCache cache) =>
 {
-	var usersToResponse =  db.Users.Skip(offset).Take(limit).OrderBy(u=>u.Name).ToList();
-	foreach (var user in usersToResponse)
+	var usersID = db.Users.Skip(offset).Take(limit).Select(u => u.Id).OrderBy(u => u).ToList(); //get limit user.id with offset
+	List<User> usersToResponse = new();
+	foreach (var userID in usersID)
 	{
-		await cache.GetUser(user.Id);
+		try
+		{
+			usersToResponse.Add(await cache.GetUser(userID));
+		}
+		catch(Exception ex)
+		{
+            await Console.Out.WriteLineAsync(ex.Message);
+        }
 	}
 	return usersToResponse;
 });
 app.MapGet("/admin/users/{email}", async (string email, EFContext db) =>
 {
-	var user = await db.Users.Where(u=>u.Email.Contains(email)).Take(15).OrderBy(u=>u.Email).ToListAsync();
+	var user = await db.Users.Where(u => u.Email.Contains(email)).Take(15).OrderBy(u => u.Email).ToListAsync();
 	if (user is not null)
 	{
 		return Results.Json(user);
@@ -71,7 +79,7 @@ app.MapPost("/login", async (string? returnUrl, HttpContext context, EFContext d
 	var form = context.Request.Form;
 	if (!form.ContainsKey("email") || !form.ContainsKey("password"))
 		return Results.BadRequest("Email or password not send");
-	if (form["email"].Count==0 || form["password"].Count == 0) return Results.BadRequest("Email or password is empty");
+	if (form["email"].Count == 0 || form["password"].Count == 0) return Results.BadRequest("Email or password is empty");
 	string email = form["email"]!;
 	string password = form["password"]!;
 	var user = await db.Users.FirstOrDefaultAsync(u => u.Email == email && u.Password == password);
@@ -96,11 +104,11 @@ app.MapPost("/login", async (string? returnUrl, HttpContext context, EFContext d
 app.MapGet("/admin/users/count", (EFContext db) =>
 {
 	int usersCount = db.Users.Count();
-	var usersCountJson = JsonSerializer.Serialize(new {Count=usersCount});
+	var usersCountJson = JsonSerializer.Serialize(new { Count = usersCount });
 	return Results.Ok(usersCountJson);
 	//TODO TRY CATCH ON ALL ENDPOINT ELSE SERVER WILL SHUT DOWN AFTER EACH FRONT ERROR ACCURING END POINTS
 });
-app.MapPut("/admin/users", async (User? dataFromFront, EFContext db) =>
+app.MapPut("/admin/users", async (User? dataFromFront, EFContext db, UserCache cashe) =>
 {
 	if (dataFromFront == null) return Results.BadRequest(new { message = "Request body is empty" });
 	var user = await db.Users.Where(u => u.Id == dataFromFront.Id).FirstOrDefaultAsync();
@@ -112,15 +120,18 @@ app.MapPut("/admin/users", async (User? dataFromFront, EFContext db) =>
 	user.PhoneNumber = dataFromFront.PhoneNumber;
 	user.Role = dataFromFront.Role;
 	db.SaveChanges();
+	await cashe.RemoveUser(user.Id);
+	await cashe.AddUser(user.Id, user);
 	return Results.Ok(user);
 });
-app.MapDelete("/admin/users", async ([FromBody] User? userForDelete, EFContext db) => //TODO why need attribute FromBody?
+app.MapDelete("/admin/users", async ([FromBody] User? userForDelete, EFContext db, UserCache cache) => //TODO why need attribute FromBody?
 {
 	if (userForDelete == null) return Results.BadRequest(new { message = "Request body is empty" });
 	var user = await db.Users.Where(u => u.Id == userForDelete.Id).FirstOrDefaultAsync();
 	if (user == null) return Results.NotFound();
 	db.Users.Remove(user);
 	db.SaveChanges();
+	await cache.RemoveUser(user.Id);
 	return Results.Ok();
 });
 #endregion
