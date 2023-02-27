@@ -28,7 +28,7 @@ public class ProtectStaticFilesForNonAdminMiddlware
 			}
 			else
 			{
-				httpContext.Response.Redirect("/html/admin/admin.html");
+				httpContext.Response.Redirect(path);
 			}
 		}
 		await next(httpContext);

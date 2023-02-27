@@ -13,6 +13,7 @@ const inputSearchByEmail = document.getElementById('inputSearchByEmail');
 const adminsMenu = document.getElementById("leftMenu"); //menu
 const adminMenuUsers = document.getElementById("adminMenuUsers"); //first menu item
 const adminMenuSettings = document.getElementById("adminMenuSettings");
+const adminMenuLogout = document.getElementById("logOut");
 //#endregion
 //#region userEditForm
 const idInput = document.getElementById("idInput");
@@ -67,7 +68,7 @@ window.addEventListener('load', () => {
 //#region functions
 let closeRightArea = (parent, area) => {//on this area user update form located
     parent.classList.remove("containerRightOpen"); //remove right grid area from grid template via class togle
-    setTimeout(() => area.classList.add("hidden"), 200); //set none value to display property of right grid area... don't work without timer, why??
+    setTimeout(() => area.classList.add("hidden"), 20); //set none value to display property of right grid area... don't work without timer, why??
 }
 
 let userUpdate = async () => { //TODO name should be update/put or save
@@ -182,10 +183,8 @@ let getUsersByEmailAsync = async (email) => {//not used yet
 
 let openArea = (parent, area) => {
     parent.classList.add("containerRightOpen");
-    parent.addEventListener("transitionstart", () => {
-        if (area.classList.contains("hidden"))
-            area.classList.remove("hidden");
-    })
+    if (area.classList.contains("hidden"))
+        area.classList.remove("hidden");
 }
 
 let fillUserFormWithValuesFromFetch = (user) => {
@@ -305,6 +304,18 @@ let searchByEmail = async () => {
     }
 
 }
+
+let logOut = async () => {
+    let response = await fetch("/logOut", {
+        method: "GET",
+        header: {
+            "ACCEPT": "application/json",
+        },
+    });
+    if (response.ok === true) {
+        location.replace("/")//TODO workaround, cause redirect after logout(cookies) don't work
+    }
+}
 //#endregion
 
 //#region listeners on static html elements
@@ -312,10 +323,11 @@ closeEditUserAreaButton.addEventListener('click', function () { closeRightArea(c
 saveUserButton.addEventListener('click', userUpdate);
 adminMenuUsers.addEventListener('click', onUsersAdminPanelClick);
 adminMenuSettings.addEventListener('click', () => {
-    closeRightArea(container, rightGridArea);
     resetContainerHTML(divForNavigateButtons);
     resetContainerHTML(divForUsersTable);
     displayOFFSearchInputs();
+    closeRightArea(container, rightGridArea);
 });
 inputSearchByEmail.addEventListener('input', searchByEmail);
+adminMenuLogout.addEventListener('click', logOut);
 //#endregion
